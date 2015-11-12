@@ -10,7 +10,7 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Data.Entity;
 using Shell.Models;
-using Shell.Middlewares;
+using Bah.Core.Site.Multitenancy;
 
 namespace Shell
 {
@@ -20,7 +20,7 @@ namespace Shell
         {
             var t = new Tenant()
             {
-                Id = name,
+                Name = name,
                 DbConnectionString = "Server=.;Database=aspnet5_" + name + ";Trusted_Connection=True;MultipleActiveResultSets=true"
             };
 
@@ -52,16 +52,15 @@ namespace Shell
             // You will also need to add the Microsoft.AspNet.Mvc.WebApiCompatShim package to the 'dependencies' section of project.json.
             // services.AddWebApiConventions();
 
-            services.AddMultiTenant<Tenant>()
+            services.AddMultitenancy<Tenant>()
                 .AddRouteProvider();
 
             services.AddSingleton<INamedTenantLookup<Tenant>, TenantLookup>();
 
-            // var connection = @"Server=(localdb)\mssqllocaldb;Database=EFGetStarted.AspNet5;Trusted_Connection=True;";
             services.AddEntityFramework()
                 .AddSqlServer()
+                .AddDbContext<TestDbContext>()
                 .AddMultitenantDbContext<TestDbContext>(services);
-            // NOTE: this should probably be grouped into a single call
             //services.AddScoped<ITestDbContext>(provider => provider.GetService<TestDbContext>());
         }
 
@@ -93,7 +92,8 @@ namespace Shell
             // Add static files to the request pipeline.
             app.UseStaticFiles();
 
-            app.UseTenantResolver();
+            // Setup Tenant IoC and rewrite path url.
+            app.UseTenantResolver(requireTenant: true);
 
             // Add MVC to the request pipeline.
             app.UseMvc(routes =>

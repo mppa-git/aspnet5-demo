@@ -4,20 +4,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Mvc;
 using Shell.Models;
-using Shell.Middlewares;
 using Microsoft.AspNet.Http.Features;
+using Bah.Core.Site.Multitenancy;
 
 namespace Shell.Controllers
 {
     public class HomeController : Controller
     {
         public TestDbContext TestDbContext { get; private set; }
-        public ITenantProvider<Tenant> TenantProvider { get; private set; }
+        public ITenantService TenantService { get; private set; }
 
-        public HomeController(TestDbContext db, ITenantProvider<Tenant> tenantProvider)
+        public HomeController(TestDbContext db, ITenantService tenantService)
         {
             this.TestDbContext = db;
-            this.TenantProvider = tenantProvider;
+            this.TenantService = tenantService;
         }
 
         public IActionResult Index()
@@ -32,8 +32,8 @@ namespace Shell.Controllers
             this.TestDbContext.SaveChanges();
 
             //var tenant = this.HttpContext.Features.Get<ITenantFeature>();
-            //var tenant = this.TenantProvider.TryGetTenant()
-            var tenantName = "hi";
+            var tenantName = this.TenantService.Tenant.Name;
+
             ViewData["Message"] = string.Format(
                 "Your {0} application description page.  {1} tests run.",
                 tenantName,
