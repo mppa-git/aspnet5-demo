@@ -22,6 +22,6 @@ namespace Shell.Models
             // Add your customizations after calling base.OnModelCreating(builder);
         }
 
-        public virtual DbSet<Test> Test { get; set; }
+        public virtual DbSet<Test> Tests { get; set; }
     }
 }

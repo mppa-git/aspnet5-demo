@@ -10,6 +10,7 @@ using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.Logging;
 using Microsoft.Data.Entity;
 using Shell.Models;
+using Shell.Middlewares;
 
 namespace Shell
 {
@@ -38,10 +39,11 @@ namespace Shell
             // services.AddWebApiConventions();
 
             // var connection = @"Server=(localdb)\mssqllocaldb;Database=EFGetStarted.AspNet5;Trusted_Connection=True;";
-            var connection = Configuration["Data:DefaultConnection:ConnectionString"];
             services.AddEntityFramework()
                 .AddSqlServer()
-                .AddDbContext<TestDbContext>(options => options.UseSqlServer(connection));
+                .AddMultitenantDbContext<TestDbContext>(services);
+            // NOTE: this should probably be grouped into a single call
+            //services.AddScoped<ITestDbContext>(provider => provider.GetService<TestDbContext>());
         }
 
         // Configure is called after ConfigureServices is called.
@@ -71,6 +73,8 @@ namespace Shell
 
             // Add static files to the request pipeline.
             app.UseStaticFiles();
+
+            app.UseTenantResolver();
 
             // Add MVC to the request pipeline.
             app.UseMvc(routes =>
