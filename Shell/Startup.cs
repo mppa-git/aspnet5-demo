@@ -14,6 +14,20 @@ using Shell.Middlewares;
 
 namespace Shell
 {
+    public class TenantLookup : INamedTenantLookup<Tenant>
+    {
+        public Task<Tenant> Lookup(string name)
+        {
+            var t = new Tenant()
+            {
+                Id = name,
+                DbConnectionString = "Server=.;Database=aspnet5_" + name + ";Trusted_Connection=True;MultipleActiveResultSets=true"
+            };
+
+            return Task.FromResult(t);
+        }
+    }
+
     public class Startup
     {
         public Startup(IHostingEnvironment env, IApplicationEnvironment appEnv)
@@ -37,6 +51,11 @@ namespace Shell
             // Uncomment the following line to add Web API services which makes it easier to port Web API 2 controllers.
             // You will also need to add the Microsoft.AspNet.Mvc.WebApiCompatShim package to the 'dependencies' section of project.json.
             // services.AddWebApiConventions();
+
+            services.AddMultiTenant<Tenant>()
+                .AddRouteProvider();
+
+            services.AddSingleton<INamedTenantLookup<Tenant>, TenantLookup>();
 
             // var connection = @"Server=(localdb)\mssqllocaldb;Database=EFGetStarted.AspNet5;Trusted_Connection=True;";
             services.AddEntityFramework()

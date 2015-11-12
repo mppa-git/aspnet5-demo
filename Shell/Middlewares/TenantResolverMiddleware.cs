@@ -38,34 +38,43 @@ namespace Shell.Middlewares
 
     }
 
-    public class TenantResolverMiddleware
+    class TenantResolverMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger _logger;
 
-        public TenantResolverMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
+        public TenantResolverMiddleware(RequestDelegate next, ILoggerFactory loggerFactory) //, ITenantService<Tenant> tenantService)
         {
             _next = next;
             _logger = loggerFactory.CreateLogger<TenantResolverMiddleware>();
+            //tenantService.Tenant.
         }
 
         static readonly Task CompletedTask = Task.FromResult((object)null);
 
-        public Task Invoke(HttpContext context, TenantService service)
+        public async Task Invoke(HttpContext context, TenantService service)
         {
             using (_logger.BeginScope("TenantResolverMiddleware"))
             {
+                _logger.LogInformation("Invoing resolver middleware.");
                 var originalPath = context.Request.Path.Value;
                 var m = Regex.Match(originalPath, "/([a-zA-Z0-9]+)(/.*)");
                 if (!m.Success)
                 {
-                    // throw new ArgumentOutOfRangeException("tenant");
-                    context.Response.StatusCode = 404;
-                    return CompletedTask;
+                    throw new ArgumentOutOfRangeException("tenant");
+                    //context.Response.StatusCode = 404;
+                    //return CompletedTask;
                 }
 
                 var tenantGroup = m.Groups[1];
                 var realPathGroup = m.Groups[2];
+
+                _logger.LogInformation("Setting tenant.");
+                if (!await service.SetTenant(context))
+                {
+                    throw new Exception("failed");
+                }
+                _logger.LogInformation("Done setting tenant.");
 
                 var tenantName = tenantGroup.Value;
                 if (!realPathGroup.Success)
@@ -73,19 +82,22 @@ namespace Shell.Middlewares
                 else
                     context.Request.Path = realPathGroup.Value;
 
+
+                /*
                 var tenant = new Tenant
                 {
                     Id = tenantName
                 };
 
-                service.SetTenant(context);
 
                 _logger.LogInformation(string.Format("Resolved tenant: {0} => {1}/{2}",
                     originalPath, tenant.Id, context.Request.Path.Value));
 
                 var tenantFeature = new TenantFeature(tenant);
                 context.Features.Set<ITenantFeature>(tenantFeature);
-                return _next(context);
+                */
+
+                await _next(context);
             }
         }
     }
@@ -101,7 +113,12 @@ namespace Shell.Middlewares
                 var tenantService = s.GetRequiredService<ITenantService<Tenant>>();
                 var tenant = tenantService.Tenant;
                 if (tenant == null)
+                {
+                    //var optionsBuilder2 = new DbContextOptionsBuilder<TContext>();
+                    //optionsBuilder2.UseSqlServer("Server=.;Database=aspnet5_b;Trusted_Connection=True;MultipleActiveResultSets=true");
+                    //return optionsBuilder2.Options;
                     return null;
+                }
 
                 var optionsBuilder = new DbContextOptionsBuilder<TContext>();
                 optionsBuilder.UseSqlServer(tenant.DbConnectionString);

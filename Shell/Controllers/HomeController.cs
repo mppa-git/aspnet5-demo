@@ -12,10 +12,12 @@ namespace Shell.Controllers
     public class HomeController : Controller
     {
         public TestDbContext TestDbContext { get; private set; }
+        public ITenantProvider<Tenant> TenantProvider { get; private set; }
 
-        public HomeController(TestDbContext db)
+        public HomeController(TestDbContext db, ITenantProvider<Tenant> tenantProvider)
         {
             this.TestDbContext = db;
+            this.TenantProvider = tenantProvider;
         }
 
         public IActionResult Index()
@@ -29,11 +31,12 @@ namespace Shell.Controllers
             this.TestDbContext.Add(row);
             this.TestDbContext.SaveChanges();
 
-            var tenant = this.HttpContext.Features.Get<ITenantFeature>();
-
+            //var tenant = this.HttpContext.Features.Get<ITenantFeature>();
+            //var tenant = this.TenantProvider.TryGetTenant()
+            var tenantName = "hi";
             ViewData["Message"] = string.Format(
                 "Your {0} application description page.  {1} tests run.",
-                tenant.Tenant.Id,
+                tenantName,
                 this.TestDbContext.Tests.Count());
 
             return View();
