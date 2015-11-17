@@ -28,7 +28,7 @@ namespace Bah.Core.Site.Multitenancy.Middlewares
             {
                 _logger.LogInformation("Invoing resolver middleware.");
                 var originalPath = context.Request.Path.Value;
-                var m = Regex.Match(originalPath, "/([a-zA-Z0-9]+)(/.*)");
+                var m = Regex.Match(originalPath, "/([a-zA-Z0-9]+)(/.*)?");
                 if (!m.Success)
                 {
                     throw new ArgumentOutOfRangeException("tenant");
@@ -46,26 +46,15 @@ namespace Bah.Core.Site.Multitenancy.Middlewares
                 }
                 _logger.LogInformation("Done setting tenant.");
 
+                /*
                 var tenantName = tenantGroup.Value;
                 if (!realPathGroup.Success)
                     context.Request.Path = "/";
                 else
                     context.Request.Path = realPathGroup.Value;
+                    */
 
 
-                /*
-                var tenant = new Tenant
-                {
-                    Id = tenantName
-                };
-
-
-                _logger.LogInformation(string.Format("Resolved tenant: {0} => {1}/{2}",
-                    originalPath, tenant.Id, context.Request.Path.Value));
-
-                var tenantFeature = new TenantFeature(tenant);
-                context.Features.Set<ITenantFeature>(tenantFeature);
-                */
 
                 await _next(context);
             }
