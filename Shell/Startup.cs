@@ -11,6 +11,8 @@ using Microsoft.Framework.Logging;
 using Microsoft.Data.Entity;
 using Shell.Models;
 using Bah.Core.Site.Multitenancy;
+using Microsoft.Framework.Primitives;
+using Bah.Core.Site.Configuration;
 
 namespace Shell
 {
@@ -33,10 +35,24 @@ namespace Shell
         public Startup(IHostingEnvironment env, IApplicationEnvironment appEnv)
         {
             // Setup configuration sources.
+            var siteName = env.EnvironmentName;
+            var clientName = "client1";
+
+            var variables = new
+            {
+                site = siteName,
+                client = clientName
+            };
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(appEnv.ApplicationBasePath)
                 .AddJsonFile("appsettings.json")
-                .AddEnvironmentVariables();
+                .AddJsonFile($"appsettings-{siteName}.json", variables)
+                .AddJsonFile($"appsettings-{clientName}.json", variables)
+                .AddJsonFile($"appsettings-{clientName}.{siteName}.json", variables, optional: true)
+                .AddJsonFile("final.json", variables, optional: true)
+                .AddJsonFile("local.json", variables, optional: true)
+                ;
             Configuration = builder.Build();
         }
 
@@ -74,7 +90,7 @@ namespace Shell
             // Configure the HTTP request pipeline.
 
             // Add the following to the request pipeline only in development environment.
-            if (env.IsDevelopment())
+            if (env.IsEnvironment("dev"))
             {
                 app.UseBrowserLink();
                 app.UseDeveloperExceptionPage();
