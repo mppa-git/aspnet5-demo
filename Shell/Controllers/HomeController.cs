@@ -6,6 +6,8 @@ using Microsoft.AspNet.Mvc;
 using Shell.Models;
 using Microsoft.AspNet.Http.Features;
 using Bah.Core.Site.Multitenancy;
+using Microsoft.Framework.OptionsModel;
+using Microsoft.Data.Entity;
 
 namespace Shell.Controllers
 {
@@ -13,11 +15,13 @@ namespace Shell.Controllers
     {
         public TestDbContext TestDbContext { get; private set; }
         public ITenantService TenantService { get; private set; }
+        private MyOptions Options { get; set; }
 
-        public HomeController(TestDbContext db, ITenantService tenantService)
+        public HomeController(TestDbContext db, ITenantService tenantService, IOptions<MyOptions> options)
         {
             this.TestDbContext = db;
             this.TenantService = tenantService;
+            this.Options = options.Value;
         }
 
         public IActionResult Index()
@@ -27,6 +31,7 @@ namespace Shell.Controllers
 
         public IActionResult About()
         {
+            this.TestDbContext.Database.Migrate();
             var row = new Test() { Name = "test" };
             this.TestDbContext.Add(row);
             this.TestDbContext.SaveChanges();

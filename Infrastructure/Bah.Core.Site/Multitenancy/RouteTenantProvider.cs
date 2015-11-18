@@ -34,7 +34,7 @@ namespace Bah.Core.Site.Multitenancy
             string Route = "";
 
             var originalPath = context.Request.Path.Value;
-            var m = Regex.Match(originalPath, "/([a-zA-Z0-9]+)(/.*)");
+            var m = Regex.Match(originalPath, "/([a-zA-Z0-9]+)(/.*)?");
             if (m.Success)
             {
                 var tenantGroup = m.Groups[1];
@@ -42,6 +42,7 @@ namespace Bah.Core.Site.Multitenancy
 
                 Route = tenantGroup.Value;
             }
+
 
             _logger.LogInformation("Route is {0}. Looking up tenant.", Route);
 

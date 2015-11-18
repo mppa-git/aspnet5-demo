@@ -1,9 +1,12 @@
-﻿using Bah.Core.Site.Multitenancy.Middlewares;
+﻿using Bah.Core.Site.Configuration;
+using Bah.Core.Site.Configuration.Options;
+using Bah.Core.Site.Multitenancy.Middlewares;
 using Microsoft.AspNet.Builder;
 using Microsoft.Data.Entity;
 using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Internal;
 using Microsoft.Framework.DependencyInjection;
+using Microsoft.Framework.OptionsModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +23,7 @@ namespace Bah.Core.Site.Multitenancy
             {
                 var tenantService = s.GetRequiredService<ITenantService<ITenant>>();
                 var tenant = tenantService.Tenant;
+                /*
                 if (tenant == null)
                 {
                     //var optionsBuilder2 = new DbContextOptionsBuilder<TContext>();
@@ -28,8 +32,13 @@ namespace Bah.Core.Site.Multitenancy
                     return null;
                 }
 
+                var dbConnectionString = tenant.Name; //.DbConnectionString;
+                */
+                var config = s.GetRequiredService<ITenantOptions<DataOptions>>();
+                var dbConnectionString = config.Value.DefaultConnection.ConnectionString;
+
                 var optionsBuilder = new DbContextOptionsBuilder<TContext>();
-                optionsBuilder.UseSqlServer(tenant.DbConnectionString);
+                optionsBuilder.UseSqlServer(dbConnectionString);
                 return optionsBuilder.Options;
             });
             services.AddScoped<DbContextOptions>(s =>
